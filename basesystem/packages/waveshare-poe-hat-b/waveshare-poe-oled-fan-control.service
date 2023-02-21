@@ -1,0 +1,8 @@
+[Unit]
+Description=waveshare-poe-oled-fan-control
+
+[Service]
+ExecStart=/usr/bin/waveshare-poe-oled-fan-control
+
+[Install]
+WantedBy=multi-user.target

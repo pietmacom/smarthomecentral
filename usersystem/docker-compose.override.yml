@@ -1,0 +1,74 @@
+version: "3.8"
+services:
+  raspberrymatic:
+    image: ghcr.io/jens-maus/raspberrymatic:latest-fix
+    labels:
+      - "traefik.http.routers.raspberrymatic.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/raspberrymatic`)"
+      - "traefik.http.routers.raspberrymatic.middlewares=raspberrymatic-header,raspberrymatic-stripprefix"
+      - "traefik.http.middlewares.raspberrymatic-stripprefix.stripprefix.prefixes=/raspberrymatic/,/"
+      - "traefik.http.middlewares.raspberrymatic-header.headers.customrequestheaders.x-ingress-path=/raspberrymatic"
+      - "traefik.http.services.raspberrymatic.loadbalancer.server.port=8099"
+
+      - "homer.enable=true"
+      - "homer.service=Applications"
+      - "homer.name=RaspberryMatic"
+      - "homer.subtitle=Homematic central control unit (CCU)"
+      - "homer.url=/raspberrymatic/"
+      - "homer.logo=https://github.com/jens-maus/RaspberryMatic/raw/master/release/rpi-imager.png"
+    privileged: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+#      - HM_RUNNING_IN_HA="1"
+      - HM_HAPROXY_SRC=0.0.0.0/0
+    volumes:
+      - ccu_data:/usr/local:rw
+      - /lib/modules:/lib/modules:ro
+      - /run/udev/control:/run/udev/control
+      - ./config/raspberrymatic/hb_rf_eth:/etc/config/hb_rf_eth:ro
+      - /etc/localtime:/etc/localtime:ro
+#    cpu_rt_runtime: 950000
+    ulimits:
+      rtprio: 99
+
+  nodered:
+    image: nodered/node-red:latest
+    labels:
+      - "traefik.http.routers.nodered.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/nodered`)"
+      - "traefik.http.routers.nodered.middlewares=nodered-header,nodered-stripprefix"
+      - "traefik.http.middlewares.nodered-stripprefix.stripprefix.prefixes=/nodered/,/"
+      - "traefik.http.middlewares.nodered-header.headers.customrequestheaders.x-ingress-path=/nodered"
+      - "traefik.http.services.nodered.loadbalancer.server.port=1880"
+
+      - "homer.enable=true"
+      - "homer.service=Applications"
+      - "homer.name=nodered"
+      - "homer.subtitle=Flow-based programming tool"
+      - "homer.url=/nodered/"
+      - "homer.logo=https://nodered.org/about/resources/media/node-red-icon.png"
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - nodered_data:/data
+
+  homeassistant:
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    labels:
+      - "homer.enable=true"
+      - "homer.service=Applications"
+      - "homer.name=Home Asssistant"
+      - "homer.subtitle=Flow-based programming tool"
+      - "homer.url=http://${HOSTNAME}:8123"
+      - "homer.logo=https://www.home-assistant.io/images/supported_brands/home-assistant.png"
+    volumes:
+      - homeassist_config:/config
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8123:8123"
+
+volumes:
+  ccu_data:
+  nodered_data:
+  homeassist_config:
