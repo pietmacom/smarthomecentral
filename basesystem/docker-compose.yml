@@ -1,0 +1,107 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik:v2.9
+    restart: unless-stopped
+    labels:
+      - "traefik.http.routers.traefik.rule=HostRegexp(`{host:.*}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
+      - "homer.enable=true"
+      - "homer.service=Tools"
+      - "homer.name=Traefik WebUI"
+      - "homer.subtitle=Reverse proxy dashboard"
+      - "homer.url=/dashboard/"
+      - "homer.icon=fas fa-traffic-light"
+    # Enables the web UI and tells Traefik to listen to docker
+    command: --api.insecure=true --providers.docker
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+#      - "8080:8080"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  homer:
+    image: b4bz/homer:latest
+    restart: unless-stopped
+    environment:
+      - INIT_ASSETS=1 # will be overwritten during first start of discoverer
+    labels:
+      - "traefik.http.routers.homer-root.rule=HostRegexp(`{host:.*}`) && Path(`/`)"
+      - "traefik.http.routers.homer-root.middlewares=homer-root@docker"
+      - "traefik.http.middlewares.homer-root.redirectregex.regex=.*"
+      - "traefik.http.middlewares.homer-root.redirectregex.replacement=/homer/"
+
+      - "traefik.http.routers.homer.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/homer`)"
+      - "traefik.http.routers.homer.middlewares=homer@docker"
+      - "traefik.http.middlewares.homer.stripprefix.prefixes=/homer/,/"
+      - "traefik.http.services.homer.loadbalancer.server.port=8080"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - homer_assets:/www/assets
+
+  homer-service-discovery:
+    image: ghcr.io/calvinbui/homer-service-discovery
+    restart: unless-stopped
+    environment:
+      - HOMER_CONFIG=/homer-assets/config.yml
+      - HOMER_BASE_CONFIG=/base.yml
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - homer_assets:/homer-assets
+      - ./config/homer/config-base.yml:/base.yml
+    depends_on:
+      - homer
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.http.routers.portainer.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/portainer`)"
+      - "traefik.http.routers.portainer.middlewares=portainer@docker"
+      - "traefik.http.middlewares.portainer.stripprefix.prefixes=/portainer/,/"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+
+      - "homer.enable=true"
+      - "homer.service=Tools"
+      - "homer.name=Portainer"
+      - "homer.subtitle=Container management"
+      - "homer.url=/portainer/"
+      - "homer.type=Portainer"
+      - "homer.icon=fab fa-docker"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+  whatsupdocker:
+    image: fmartinou/whats-up-docker
+    labels:
+      - "traefik.http.routers.wud.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/wud`)"
+      - "traefik.http.routers.wud.middlewares=wud-header,wud-header1,wud-stripprefix"
+      - "traefik.http.middlewares.wud-stripprefix.stripprefix.prefixes=/wud/,/"
+      - "traefik.http.middlewares.wud-header.headers.customrequestheaders.x-ingress-path=/wud"
+      - "traefik.http.middlewares.wud-header1.headers.customrequestheaders.X-External-Path=/wud"
+      - "traefik.http.services.wud.loadbalancer.server.port=3000"
+
+      - "homer.enable=true"
+      - "homer.service=Tools"
+      - "homer.name=Whats up Docker"
+      - "homer.subtitle=Image update notifier"
+      - "homer.url=/wud/"
+      - "homer.type=WUD"
+      - "homer.icon=fas fa-info"
+    restart: unless-stopped
+#    environment:
+#      - WUD_PUBLIC_URL=/wud
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  homer_assets:
+  portainer_data:
