@@ -14,12 +14,12 @@ services:
       - "homer.name=RaspberryMatic"
       - "homer.subtitle=Homematic central control unit (CCU)"
       - "homer.url=/raspberrymatic/"
+      - "homer.target=_blank"
       - "homer.logo=https://github.com/jens-maus/RaspberryMatic/raw/master/release/rpi-imager.png"
     privileged: true
     restart: unless-stopped
     stop_grace_period: 30s
     environment:
-#      - HM_RUNNING_IN_HA="1"
       - HM_HAPROXY_SRC=0.0.0.0/0
     volumes:
       - ccu_data:/usr/local:rw
@@ -42,9 +42,10 @@ services:
 
       - "homer.enable=true"
       - "homer.service=Applications"
-      - "homer.name=nodered"
+      - "homer.name=Nodered"
       - "homer.subtitle=Flow-based programming tool"
       - "homer.url=/nodered/"
+      - "homer.target=_blank"
       - "homer.logo=https://nodered.org/about/resources/media/node-red-icon.png"
     restart: unless-stopped
     volumes:
@@ -57,18 +58,80 @@ services:
       - "homer.enable=true"
       - "homer.service=Applications"
       - "homer.name=Home Asssistant"
-      - "homer.subtitle=Flow-based programming tool"
+      - "homer.subtitle=Open source home automation"
       - "homer.url=http://${HOSTNAME}:8123"
+      - "homer.target=_blank"
       - "homer.logo=https://www.home-assistant.io/images/supported_brands/home-assistant.png"
     volumes:
       - homeassist_config:/config
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
-    privileged: true
     ports:
       - "8123:8123"
+
+  mqtt:
+    container_name: mqtt
+    image: eclipse-mosquitto:1.6
+
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:0.12.0-beta8
+    labels:
+      - "traefik.http.routers.frigate.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/frigate`)"
+      - "traefik.http.routers.frigate.middlewares=frigate-header,frigate-stripprefix"
+      - "traefik.http.middlewares.frigate-stripprefix.stripprefix.prefixes=/frigate/,/"
+      - "traefik.http.middlewares.frigate-header.headers.customrequestheaders.x-ingress-path=/frigate"
+      - "traefik.http.services.frigate.loadbalancer.server.port=5000"
+
+      - "homer.enable=true"
+      - "homer.service=Applications"
+      - "homer.name=Frigate"
+      - "homer.subtitle=A complete and local NVR"
+      - "homer.url=/frigate/"
+      - "homer.target=_blank"
+      - "homer.logo=https://docs.frigate.video/img/logo.svg"
+    restart: "unless-stopped"
+    environment:
+      FRIGATE_RTSP_PASSWORD: "pass"
+      PLUS_API_KEY: "874c2cfc-b306-4381-9f93-644ae98fa6c8:a1c3da22670778253b283deefad1a1f499677d7c"
+#    privileged: true
+    group_add:
+      - "109" # render
+      - "110" # render
+      - "44"  # video
+      - "46"  # plugdev
+    shm_size: "256mb"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config/frigate/config.yml:/config/config.yml:ro
+      - frigate_media:/media/frigate
+      - /dev/bus/usb:/dev/bus/usb
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+#      - /dev/video10:/dev/video10
+#      - /dev/video11:/dev/video11
+#      - /dev/video12:/dev/video12
+#      - /dev/video13:/dev/video13
+#      - /dev/video14:/dev/video14
+#      - /dev/video15:/dev/video15
+#      - /dev/video16:/dev/video16
+#      - /dev/video18:/dev/video18
+#      - /dev/video20:/dev/video20
+#      - /dev/video21:/dev/video21
+#      - /dev/video22:/dev/video22
+#      - /dev/video23:/dev/video23
+#      - /dev/video31:/dev/video31
+    depends_on:
+      - mqtt
+
+  docker-volume-backup:
+    volumes:
+      - ccu_data:/backup/ccu_data
+      - nodered_data:/backup/nodered_data
+      - homeassist_config:/backup/homeassist_config
+      - frigate_media:/backup/frigate_media
 
 volumes:
   ccu_data:
   nodered_data:
   homeassist_config:
+  frigate_media:

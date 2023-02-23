@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  reverse-proxy:
+  traefik:
     image: traefik:v2.9
     restart: unless-stopped
     labels:
@@ -13,6 +13,7 @@ services:
       - "homer.name=Traefik WebUI"
       - "homer.subtitle=Reverse proxy dashboard"
       - "homer.url=/dashboard/"
+      - "homer.target=_blank"
       - "homer.icon=fas fa-traffic-light"
     # Enables the web UI and tells Traefik to listen to docker
     command: --api.insecure=true --providers.docker
@@ -73,7 +74,10 @@ services:
       - "homer.subtitle=Container management"
       - "homer.url=/portainer/"
       - "homer.type=Portainer"
+      - "homer.target=_blank"
       - "homer.icon=fab fa-docker"
+
+      - "docker-volume-backup.stop-during-backup=true"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -95,12 +99,24 @@ services:
       - "homer.subtitle=Image update notifier"
       - "homer.url=/wud/"
       - "homer.type=WUD"
+      - "homer.target=_blank"
       - "homer.icon=fas fa-info"
     restart: unless-stopped
-#    environment:
-#      - WUD_PUBLIC_URL=/wud
+    ports:
+      - 3000:3000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+  docker-volume-backup:
+    image: offen/docker-volume-backup:v2.25.1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /media/data/backup:/archive
+      - portainer_data:/backup/portainer_data
+#    environment:
+#     - BACKUP_CRON_EXPRESSION="0 2 * * *"
+#    entrypoint:
+#     - backup
 
 volumes:
   homer_assets:
