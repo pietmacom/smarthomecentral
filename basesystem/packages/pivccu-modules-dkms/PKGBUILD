@@ -5,7 +5,10 @@ pkgname=${_pkgbase}-dkms
 pkgver=1.0.80
 pkgrel=1
 pkgdesc="Kernel modules needed for Homematic"
-arch=('x86_64' 'arm' 'armv6h' 'armv7h')
+arch=('x86_64' 
+      'arm' 
+      'armv6h' 
+      'armv7h')
 url="https://github.com/alexreinert/piVCCU/"
 license=('GPL')
 depends=('dkms')
@@ -24,16 +27,10 @@ prepare() {
 }
 
 package() {
-    install -Dm644 -t "${pkgdir}"/usr/src/${_pkgbase}-${pkgver}/ \
-        pivccu/kernel/* dkms.conf
-
-    # This is in the eq3_char_loop-dkms package
-#    sed -i '/eq3_char_loop/d' "${pkgdir}"/usr/src/${_pkgbase}-${pkgver}/Makefile
+    install -Dm644 -t "${pkgdir}"/usr/src/${_pkgbase}-${pkgver}/ pivccu/kernel/* dkms.conf
 
     # Set name and version in dkms.conf
     sed -e "s/@_PKGBASE@/${_pkgbase}/" \
         -e "s/@PKGVER@/${pkgver}/" \
         -i "${pkgdir}"/usr/src/${_pkgbase}-${pkgver}/dkms.conf
 }
-
-# vim:set sw=4 sts=4 et:

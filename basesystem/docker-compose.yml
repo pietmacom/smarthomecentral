@@ -109,6 +109,7 @@ services:
 
   docker-volume-backup:
     image: offen/docker-volume-backup:v2.25.1
+    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /media/data/backup:/archive
