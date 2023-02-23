@@ -69,10 +69,10 @@ services:
     ports:
       - "8123:8123"
 
-  mqtt:
+  eclipse-mosquitto:
     image: eclipse-mosquitto:2.0.15
     container_name: mqtt
-    restart: unless-stopped4
+    restart: unless-stopped
     volumes:
       - mosquitto_data:/mosquitto/data
 
@@ -124,7 +124,7 @@ services:
 #      - /dev/video23:/dev/video23
 #      - /dev/video31:/dev/video31
     depends_on:
-      - mqtt
+      - eclipse-mosquitto
 
   docker-volume-backup:
     volumes:
