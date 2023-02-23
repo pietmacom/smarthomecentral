@@ -62,16 +62,19 @@ services:
       - "homer.url=http://${HOSTNAME}:8123"
       - "homer.target=_blank"
       - "homer.logo=https://www.home-assistant.io/images/supported_brands/home-assistant.png"
+    restart: unless-stopped
     volumes:
       - homeassist_config:/config
       - /etc/localtime:/etc/localtime:ro
-    restart: unless-stopped
     ports:
       - "8123:8123"
 
   mqtt:
+    image: eclipse-mosquitto:2.0.15
     container_name: mqtt
-    image: eclipse-mosquitto:1.6
+    restart: unless-stopped4
+    volumes:
+      - mosquitto_data:/mosquitto/data
 
   frigate:
     image: ghcr.io/blakeblackshear/frigate:0.12.0-beta8
@@ -89,7 +92,7 @@ services:
       - "homer.url=/frigate/"
       - "homer.target=_blank"
       - "homer.logo=https://docs.frigate.video/img/logo.svg"
-    restart: "unless-stopped"
+    restart: unless-stopped
     environment:
       FRIGATE_RTSP_PASSWORD: "pass"
       PLUS_API_KEY: "874c2cfc-b306-4381-9f93-644ae98fa6c8:a1c3da22670778253b283deefad1a1f499677d7c"
@@ -128,10 +131,12 @@ services:
       - ccu_data:/backup/ccu_data
       - nodered_data:/backup/nodered_data
       - homeassist_config:/backup/homeassist_config
+      - mosquitto_data:/backup/mosquitto_data
       - frigate_media:/backup/frigate_media
 
 volumes:
   ccu_data:
   nodered_data:
   homeassist_config:
+  mosquitto_data:
   frigate_media:
