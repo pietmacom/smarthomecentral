@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   raspberrymatic:
-    image: ghcr.io/jens-maus/raspberrymatic:latest-fix
+    image: ghcr.io/jens-maus/raspberrymatic:3.67.10.20230225-53b790d
     labels:
       - "traefik.http.routers.raspberrymatic.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/raspberrymatic`)"
       - "traefik.http.routers.raspberrymatic.middlewares=raspberrymatic-header,raspberrymatic-stripprefix"
@@ -30,7 +30,8 @@ services:
 #    cpu_rt_runtime: 950000
     ulimits:
       rtprio: 99
-
+  # Docs
+  #  - https://nodered.org/docs/getting-started/docker
   nodered:
     image: nodered/node-red:latest
     labels:
