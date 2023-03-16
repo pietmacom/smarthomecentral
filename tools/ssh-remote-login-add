@@ -1,0 +1,50 @@
+#!/bin/bash
+
+function yes_or_no {
+    while true; do
+        read -p "$* [y/n]: " yn
+        case $yn in
+            [Yy]*) return 0  ;;  
+            [Nn]*) echo "Aborted" ; return  1 ;;
+        esac
+    done
+} 
+
+login=$1
+host=$2
+
+if ! yes_or_no "Does the remote user ${login} have a temporary password? [ \$passwd ${login} ]" ;
+then
+    exit
+fi
+
+if [[ -z $login ]];
+then
+    echo "No login provided."
+    exit
+fi
+
+if [[ -z $host ]];
+then
+    echo "No host provided."
+    exit
+fi
+
+store=~/.ssh
+privatefile=$2
+publicfile=${privatefile}.pub
+
+ssh-keygen -f ${store}/${privatefile} -N ''
+scp ${store}/${publicfile} ${login}@${host}:/tmp/${publicfile}
+ssh ${login}@${host} "mkdir -p ~/.ssh; chmod 700 ~/.ssh; touch ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys; cat /tmp/${publicfile} >> ~/.ssh/authorized_keys; rm /tmp/${publicfile}"
+
+config=${store}/config
+echo "Host ${host}" >> ${config}
+echo -e "\tHostName ${host}" >> ${config}
+echo -e "\tUser ${login}" >> ${config}
+echo -e "\tCheckHostIP no" >> ${config}
+echo -e "\tIdentityFile ${store}/${privatefile}" >> ${config}
+echo >> ${config}
+
+echo "SSH login has been added."
+echo "Please delete the remote users ${login} password [ \$passwd --delete --lock ${login} ]"

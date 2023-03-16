@@ -17,19 +17,23 @@ services:
       - "homer.target=_blank"
       - "homer.logo=https://github.com/jens-maus/RaspberryMatic/raw/master/release/rpi-imager.png"
     privileged: true
-    restart: unless-stopped
+    restart: "unless-stopped"
     stop_grace_period: 30s
+    healthcheck:
+      disable: true
     environment:
       - HM_HAPROXY_SRC=0.0.0.0/0
     volumes:
       - ccu_data:/usr/local:rw
       - /lib/modules:/lib/modules:ro
       - /run/udev/control:/run/udev/control
-      - ./config/raspberrymatic/hb_rf_eth:/etc/config/hb_rf_eth:ro
       - /etc/localtime:/etc/localtime:ro
 #    cpu_rt_runtime: 950000
     ulimits:
       rtprio: 99
+
+
+
   # Docs
   #  - https://nodered.org/docs/getting-started/docker
   nodered:
@@ -48,7 +52,7 @@ services:
       - "homer.url=/nodered/"
       - "homer.target=_blank"
       - "homer.logo=https://nodered.org/about/resources/media/node-red-icon.png"
-    restart: unless-stopped
+    restart: "unless-stopped"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - nodered_data:/data
@@ -63,7 +67,7 @@ services:
       - "homer.url=http://${HOSTNAME}:8123"
       - "homer.target=_blank"
       - "homer.logo=https://www.home-assistant.io/images/supported_brands/home-assistant.png"
-    restart: unless-stopped
+    restart: "unless-stopped"
     volumes:
       - homeassist_config:/config
       - /etc/localtime:/etc/localtime:ro
@@ -72,8 +76,8 @@ services:
 
   eclipse-mosquitto:
     image: eclipse-mosquitto:2.0.15
-    container_name: mqtt
-    restart: unless-stopped
+    hostname: mqtt
+    restart: "unless-stopped"
     volumes:
       - mosquitto_data:/mosquitto/data
 
@@ -93,7 +97,7 @@ services:
       - "homer.url=/frigate/"
       - "homer.target=_blank"
       - "homer.logo=https://docs.frigate.video/img/logo.svg"
-    restart: unless-stopped
+    restart: "unless-stopped"
     environment:
       FRIGATE_RTSP_PASSWORD: "pass"
       PLUS_API_KEY: "874c2cfc-b306-4381-9f93-644ae98fa6c8:a1c3da22670778253b283deefad1a1f499677d7c"

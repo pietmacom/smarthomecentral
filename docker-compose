@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+_yamlFiles="$(find $(realpath .) -mindepth 2 -maxdepth 2 -name "docker-compose.yml" | sort | xargs -I {} echo -n "-f {} ")"
+_envFile=""
+if [[ -e "config/.env" ]]; then
+    _envFile="--env-file config/.env"
+fi
+
+docker compose --project-directory $(pwd) ${_envFile} ${_yamlFiles} $@
+

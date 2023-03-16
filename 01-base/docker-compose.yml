@@ -3,7 +3,7 @@ version: '3'
 services:
   traefik:
     image: traefik:v2.9
-    restart: unless-stopped
+    restart: "unless-stopped"
     labels:
       - "traefik.http.routers.traefik.rule=HostRegexp(`{host:.*}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
@@ -28,7 +28,7 @@ services:
 
   homer:
     image: b4bz/homer:latest
-    restart: unless-stopped
+    restart: "unless-stopped"
     environment:
       - INIT_ASSETS=1 # will be overwritten during first start of discoverer
     labels:
@@ -47,7 +47,7 @@ services:
 
   homer-service-discovery:
     image: ghcr.io/calvinbui/homer-service-discovery
-    restart: unless-stopped
+    restart: "unless-stopped"
     environment:
       - HOMER_CONFIG=/homer-assets/config.yml
       - HOMER_BASE_CONFIG=/base.yml
@@ -61,7 +61,7 @@ services:
 
   portainer:
     image: portainer/portainer-ce:latest
-    restart: unless-stopped
+    restart: "unless-stopped"
     labels:
       - "traefik.http.routers.portainer.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/portainer`)"
       - "traefik.http.routers.portainer.middlewares=portainer@docker"
@@ -101,25 +101,44 @@ services:
       - "homer.type=WUD"
       - "homer.target=_blank"
       - "homer.icon=fas fa-info"
-    restart: unless-stopped
+    restart: "unless-stopped"
     ports:
       - 3000:3000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+#  # Docs
+#  # - https://github.com/offen/docker-volume-backup
+#  # - https://docs.docker.com/compose/profiles/
+#  docker-volume-backup:
+#    build: ./docker-images/docker-volume-backup
+#    labels:
+#      - docker-volume-backup.archive-pre=/bin/sh -c 'backup-docker-images /backup/docker_data'
+##      - docker-volume-backup.archive-post=/bin/sh -c 'rm -rf /backup/docker/*'
+#    restart: "unless-stopped"
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#      - ./tools/backup-docker-images:/usr/bin/backup-docker-images:ro
+#      - /root/.ssh/backup.autorisation.de:/root/.ssh/id_rsa:ro
+#      - portainer_data:/backup/portainer_data
+#      - docker_data:/backup/docker_data
+#    environment:
+#     - BACKUP_CRON_EXPRESSION=5 9 * * *
+#     - SSH_HOST_NAME=backup.autorisation.de
+#     - SSH_PORT=22
+#     - SSH_USER=dsrvhm03
+#     - SSH_REMOTE_PATH=/media/data/backup/dsrvhm03/backup
+
   # Docs
   # - https://github.com/offen/docker-volume-backup
+  # - https://docs.docker.com/compose/profiles/
   docker-volume-backup:
-    image: offen/docker-volume-backup:v2.25.1
-    restart: unless-stopped
+    build: https://github.com/pietmacom/docker-volume-backup.git#master
+    restart: "unless-stopped"
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /media/data/backup:/archive
       - portainer_data:/backup/portainer_data
-#    environment:
-#     - BACKUP_CRON_EXPRESSION="0 2 * * *"
-#    entrypoint:
-#     - backup
 
 volumes:
   homer_assets:
