@@ -14,6 +14,8 @@ function yes_or_no {
 find $(realpath .) -mindepth 2 -maxdepth 3 -path "*/config-default/*" -type d  -exec sh -iex -c "[[ ! -e config/\$(basename {}) ]] && ln -sr {} config/\$(basename {}) || true" \;
 find $(realpath .) -mindepth 2 -maxdepth 3 -path "*/docker-images/*" -type d  -exec sh -iex -c "[[ ! -e docker-images/\$(basename {}) ]] && ln -sr {} docker-images/\$(basename {}) || true" \;
 
+export HOSTNAME
+
 ./docker-compose down --remove-orphans
 yes_or_no "Do you want to remove volumes?" && ./docker-compose down --volumes
 
