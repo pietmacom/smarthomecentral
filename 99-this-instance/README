@@ -3,6 +3,6 @@ Add all your settings and cusomiziations here.
 For example:
  - docker-compose.yml
  - config/
- - docker-images
+ - docker-images/
 
 This directory is not pushed or replaced, when you pull a new version.
