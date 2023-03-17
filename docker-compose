@@ -6,5 +6,5 @@ if [[ -e "config/.env" ]]; then
     _envFile="--env-file config/.env"
 fi
 
-docker compose --project-directory $(pwd)/runtime ${_envFile} ${_yamlFiles} $@
+docker compose -p $(basename $(pwd)) --project-directory $(pwd)/runtime ${_envFile} ${_yamlFiles} $@
 

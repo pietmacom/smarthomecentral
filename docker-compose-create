@@ -49,6 +49,8 @@ find $(realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/dock
 done
 
 
+export HOSTNAME
+
 # only delete all when no service has been specified
 if [[ -z "$@" ]]; then
     ./docker-compose down --remove-orphans
@@ -58,10 +60,10 @@ else
 fi
 
 
-export HOSTNAME
 ./docker-compose create --force-recreate --remove-orphans --build "$@"
 #source ./docker-compose-create-after.sh
 #yes_or_no "Do you want to start services?" && docker compose start
+
 
 ./docker-compose start "$@"
 
