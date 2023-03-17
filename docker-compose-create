@@ -10,21 +10,60 @@ function yes_or_no {
     done
 }
 
-#find $(realpath .) -mindepth 2 -maxdepth 2 -name "config-default" -type d -exec sh -c "cp -srn {}/* config" \;
-find $(realpath .) -mindepth 2 -maxdepth 3 -path "*/config-default/*" -type d  -exec sh -iex -c "[[ ! -e config/\$(basename {}) ]] && ln -sr {} config/\$(basename {}) || true" \;
-find $(realpath .) -mindepth 2 -maxdepth 3 -path "*/docker-images/*" -type d  -exec sh -iex -c "[[ ! -e docker-images/\$(basename {}) ]] && ln -sr {} docker-images/\$(basename {}) || true" \;
+function _symlinkOrCombine() {
+    local _srcPath="$(realpath ${1})"
+    local _dstPath="$(realpath ${2})"
+    local _dstPathSymlink="${_dstPath}/$(basename ${_srcPath})"
+
+    if [[ ! -e "${_dstPath}" ]]; then mkdir -p ${_dstPath}; fi
+
+    # remove symlink to source directory and
+    # create symlinks to the files in source path
+    if [[ -L "${_dstPathSymlink}" ]]; then
+        local _originSrcPath="$(realpath ${_dstPathSymlink})"
+        rm -rf ${_dstPathSymlink}
+        mkdir -p ${_dstPathSymlink}
+        cp -rsn ${_originSrcPath} ${_dstPath}
+    fi
+
+    # decide to create symlink to the whole source directory or
+    # create symlinks to the files in source path
+    if [[ -d "${_dstPathSymlink}" ]];
+        then cp -rsn ${_srcPath} ${_dstPath}
+        else ln -sr ${_srcPath} ${_dstPathSymlink}
+    fi
+}
+
+find . -maxdepth 2 -path "./runtime/*" -not -name ".gitignore" -not -name "README*" -exec rm -rf {} \;
+
+find $(realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/config/.*' -print0 \
+| sort -zr \
+| while IFS= read -r -d '' _found; do
+    _symlinkOrCombine "${_found}" "runtime/config"
+done
+
+find $(realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/docker-images/.*' -print0 \
+| sort -zr \
+| while IFS= read -r -d '' _found; do
+    _symlinkOrCombine "${_found}" "runtime/docker-images"
+done
+
+
+# only delete all when no service has been specified
+if [[ -z "$@" ]]; then
+    ./docker-compose down --remove-orphans
+    yes_or_no "Do you want to remove volumes?" && ./docker-compose down --volumes
+else
+    ./docker-compose stop "$@"
+fi
+
 
 export HOSTNAME
-
-./docker-compose down --remove-orphans
-yes_or_no "Do you want to remove volumes?" && ./docker-compose down --volumes
-
-./docker-compose create --build
+./docker-compose create --force-recreate --remove-orphans --build "$@"
 #source ./docker-compose-create-after.sh
-
 #yes_or_no "Do you want to start services?" && docker compose start
 
-./docker-compose start
+./docker-compose start "$@"
 
 #docker compose exec -it docker-volume-backup /bin/sh -c 'apk update && apk add docker-cli'
 #source ./docker-compose-start-after.sh
