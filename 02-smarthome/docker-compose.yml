@@ -57,6 +57,17 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - nodered_data:/data
 
+  # Docs
+  # - https://discourse.nodered.org/t/auto-install-packages-using-package-json/23135/4
+  # - https://nodered.org/docs/user-guide/node-red-admin
+  nodered-init:
+    image: nodered/node-red:latest
+    entrypoint: ''
+    command: /bin/sh -c "node-red-admin target http://nodered:1880 && sleep 20 && node-red-admin install node-red-contrib-huemagic-fork || true && node-red-admin install node-red-contrib-ccu || true"
+    depends_on:
+      nodered:
+        condition: service_started
+
   homeassistant:
     image: "ghcr.io/home-assistant/home-assistant:stable"
     labels:

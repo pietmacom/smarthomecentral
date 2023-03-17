@@ -34,6 +34,7 @@ function _symlinkOrCombine() {
     fi
 }
 
+
 find . -maxdepth 2 -path "./runtime/*" -not -name ".gitignore" -not -name "README*" -exec rm -rf {} \;
 
 find $(realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/config/.*' -print0 \
@@ -46,6 +47,12 @@ find $(realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/dock
 | sort -zr \
 | while IFS= read -r -d '' _found; do
     _symlinkOrCombine "${_found}" "runtime/docker-images"
+done
+
+find $(realpath .) -mindepth 2 -maxdepth 2 -type f -regex '.*/[0-9][0-9]-.*/.env' -print0 \
+| sort -z \
+| while IFS= read -r -d '' _found; do
+    cat ${_found} >> ./runtime/.env
 done
 
 
