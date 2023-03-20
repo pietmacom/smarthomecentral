@@ -1,4 +1,4 @@
-FROM dsrvcr01:5000/aarch64/archlinux:latest
+FROM 192.168.182.17:5000/aarch64/archlinux:latest
 #FROM menci/archlinuxarm:base-devel
 RUN pacman --noconfirm -Syu
 RUN pacman --noconfirm -S base-devel rsync git && \
