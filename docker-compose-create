@@ -69,5 +69,6 @@ else
     ./docker-compose stop "$@"
 fi
 
+./docker-compose pull --ignore-pull-failures "$@"
 ./docker-compose create --force-recreate --remove-orphans --build "$@"
 ./docker-compose start "$@"
