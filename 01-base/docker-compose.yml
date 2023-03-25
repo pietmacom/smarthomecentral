@@ -77,7 +77,7 @@ services:
       - "homer.target=_blank"
       - "homer.icon=fab fa-docker"
 
-      - "docker-volume-backup.stop-during-backup=true"
+      - "com.pietma.backup.container.stop-during=true"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
