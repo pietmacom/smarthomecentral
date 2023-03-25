@@ -10,9 +10,20 @@ function yes_or_no {
     done
 }
 
+# compatibility with macos
+function _realpath() {
+	if which realpath > /dev/null 2>&1 ; then
+		realpath "$1"
+	elif [[ $1 = /* ]]; then
+		echo "$1"
+	else
+		echo "$PWD/${1#./}"
+	fi
+}
+
 function _symlinkOrCombine() {
-    local _srcPath="$(realpath ${1})"
-    local _dstPath="$(realpath ${2})"
+    local _srcPath="$(_realpath ${1})"
+    local _dstPath="$(_realpath ${2})"
     local _dstPathSymlink="${_dstPath}/$(basename ${_srcPath})"
 
     if [[ ! -e "${_dstPath}" ]]; then mkdir -p ${_dstPath}; fi
@@ -20,7 +31,7 @@ function _symlinkOrCombine() {
     # remove symlink to source directory and
     # create symlinks to the files in source path
     if [[ -L "${_dstPathSymlink}" ]]; then
-        local _originSrcPath="$(realpath ${_dstPathSymlink})"
+        local _originSrcPath="$(_realpath ${_dstPathSymlink})"
         rm -rf ${_dstPathSymlink}
         mkdir -p ${_dstPathSymlink}
         cp -rsn ${_originSrcPath} ${_dstPath}
@@ -30,7 +41,7 @@ function _symlinkOrCombine() {
     # create symlinks to the files in source path
     if [[ -d "${_dstPathSymlink}" ]];
         then cp -rsn ${_srcPath} ${_dstPath}
-        else ln -sr ${_srcPath} ${_dstPathSymlink}
+        else ln -s ${_srcPath} ${_dstPathSymlink}
     fi
 }
 
@@ -38,19 +49,19 @@ function _symlinkOrCombine() {
 #
 find . -maxdepth 2 -path "./runtime/*" -not -name ".gitignore" -not -name "README*" -exec rm -rf {} \;
 
-find $(realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/config/.*' -print0 \
+find $(_realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/config/.*' -print0 \
 | sort -zr \
 | while IFS= read -r -d '' _found; do
     _symlinkOrCombine "${_found}" "runtime/config"
 done
 
-find $(realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/docker-images/.*' -print0 \
+find $(_realpath .) -mindepth 3 -maxdepth 3 -type d -regex '.*/[0-9][0-9]-.*/docker-images/.*' -print0 \
 | sort -zr \
 | while IFS= read -r -d '' _found; do
     _symlinkOrCombine "${_found}" "runtime/docker-images"
 done
 
-find $(realpath .) -mindepth 2 -maxdepth 2 -type f -regex '.*/[0-9][0-9]-.*/.env' -print0 \
+find $(_realpath .) -mindepth 2 -maxdepth 2 -type f -regex '.*/[0-9][0-9]-.*/.env' -print0 \
 | sort -z \
 | while IFS= read -r -d '' _found; do
     cat ${_found} >> ./runtime/.env
@@ -70,5 +81,5 @@ else
 fi
 
 ./docker-compose pull --ignore-pull-failures "$@"
-./docker-compose create --force-recreate --remove-orphans --build "$@"
+./docker-compose create --force-recreate --build "$@"
 ./docker-compose start "$@"

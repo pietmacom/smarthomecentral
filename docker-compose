@@ -1,6 +1,17 @@
 #!/bin/sh -e
 
-_yamlFiles="$(find $(realpath .) -mindepth 2 -maxdepth 2 -name "docker-compose.yml" | sort | xargs -I {} echo -n "-f {} ")"
+# compatibility with macos
+function _realpath() {
+	if which realpath > /dev/null 2>&1 ; then
+		realpath "$1"
+	elif [[ $1 = /* ]]; then
+		echo "$1"
+	else
+		echo "$PWD/${1#./}"
+	fi
+}
+
+_yamlFiles="$(find $(_realpath .) -mindepth 2 -maxdepth 2 -name "docker-compose.yml" | sort | xargs -I {} echo -n "-f {} ")"
 _envFile=""
 if [[ -e "config/.env" ]]; then
     _envFile="--env-file config/.env"

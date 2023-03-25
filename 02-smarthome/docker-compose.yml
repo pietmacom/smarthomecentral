@@ -123,9 +123,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./config/frigate/config.yml:/config/config.yml:ro
       - frigate_media:/media/frigate
-      - /dev/bus/usb:/dev/bus/usb
-    devices:
-      - /dev/bus/usb:/dev/bus/usb
+#      - /dev/bus/usb:/dev/bus/usb
+#    devices:
+#      - /dev/bus/usb:/dev/bus/usb
 #      - /dev/video10:/dev/video10
 #      - /dev/video11:/dev/video11
 #      - /dev/video12:/dev/video12
