@@ -133,7 +133,9 @@ services:
   # - https://github.com/offen/docker-volume-backup
   # - https://docs.docker.com/compose/profiles/
   docker-volume-backup:
-    build: https://github.com/pietmacom/docker-volume-backup.git#master
+    build:
+      context: https://github.com/pietmacom/docker-volume-backup.git#master
+      network: host
     restart: "unless-stopped"
     volumes:
       - /etc/localtime:/etc/localtime:ro
