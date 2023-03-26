@@ -144,11 +144,11 @@ services:
 
   docker-volume-backup:
     volumes:
-      - ccu_data:/backup/ccu_data
-      - nodered_data:/backup/nodered_data
-      - homeassist_config:/backup/homeassist_config
-      - mosquitto_data:/backup/mosquitto_data
-      - frigate_media:/backup/frigate_media
+      - ccu_data:/volumes/ccu_data
+      - nodered_data:/volumes/nodered_data
+      - homeassist_config:/volumes/homeassist_config
+      - mosquitto_data:/volumes/mosquitto_data
+      - frigate_media:/volumes/frigate_media
 
 volumes:
   ccu_data:

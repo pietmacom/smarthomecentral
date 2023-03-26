@@ -140,10 +140,10 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - portainer_data:/backup/portainer_data
+      - portainer_data:/volumes/portainer_data
     environment:
       - BACKUP_TARGET=dummy
-
+      
 volumes:
   homer_assets:
   portainer_data:

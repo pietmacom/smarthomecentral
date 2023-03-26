@@ -34,6 +34,7 @@ function _symlinkOrCombine() {
         local _originSrcPath="$(_realpath ${_dstPathSymlink})"
         rm -rf ${_dstPathSymlink}
         mkdir -p ${_dstPathSymlink}
+        # won't work on macos
         cp -rsn ${_originSrcPath} ${_dstPath}
     fi
 
