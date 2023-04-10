@@ -13,7 +13,7 @@ function yes_or_no {
 login=$1
 host=$2
 
-if ! yes_or_no "Does the remote user ${login} have a temporary password? [ \$passwd ${login} ]" ;
+if ! yes_or_no "Does the remote user ${login} have a temporary password? [ \$> passwd ${login} ]" ;
 then
     exit
 fi
@@ -47,4 +47,4 @@ echo -e "\tIdentityFile ${store}/${privatefile}" >> ${config}
 echo >> ${config}
 
 echo "SSH login has been added."
-echo "Please delete the remote users ${login} password [ \$passwd --delete --lock ${login} ]"
+echo "Please delete the remote users ${login} password [ \$> passwd --delete --lock ${login} ]"
