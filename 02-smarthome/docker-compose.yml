@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   raspberrymatic:
-    image: ghcr.io/jens-maus/raspberrymatic:3.67.10.20230225-53b790d
+    image: ghcr.io/jens-maus/raspberrymatic:latest
     labels:
       - "traefik.http.routers.raspberrymatic.rule=HostRegexp(`{host:.*}`) && PathPrefix(`/raspberrymatic`)"
       - "traefik.http.routers.raspberrymatic.middlewares=raspberrymatic-header,raspberrymatic-stripprefix"

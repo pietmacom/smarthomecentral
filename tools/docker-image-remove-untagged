@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+docker image rm -f $(docker image ls | grep '<none>' | sed "s|  *|\t|g" | cut -f 3)
