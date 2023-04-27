@@ -1,7 +1,5 @@
 #!/bin/sh -ex
 
-#PARTITION="/dev/mmcblk0p4"
-
 function _addToFstab() {
     if [[ -z "$(cat /etc/fstab | grep "${1}")" ]];
     then
@@ -23,7 +21,7 @@ function _addToData() {
 
     if [[ -z "${_destination}" ]];
     then
-	_destination="/media/data${_source}"
+	_destination="${DATA_PATH}${_source}"
     fi
 
     mkdir -p ${_destination}
@@ -37,7 +35,7 @@ function _rebindToData() {
 
     if [[ -z "${_destination}" ]];
     then
-	_destination="/media/data${_source}"
+	_destination="${DATA_PATH}${_source}"
     fi
 
     _addToData ${_source} ${_destination}
@@ -50,6 +48,8 @@ then
     exit
 fi
 
+DATA_PATH="/media/data"
+
 systemctl stop docker
 systemctl stop docker.socket
 systemctl stop containerd
@@ -58,24 +58,24 @@ sleep 30
 
 PARTITION="$1"
 PARTITION_ID="$(find -L /dev/disk/by-id -samefile ${PARTITION} | head -n 1)"
-if [[ ! -z "$(mount | grep '/media/data')" ]];
+if [[ ! -z "$(mount | grep '${DATA_PATH}')" ]];
 then
     umount -A ${PARTITION}
 fi
 
 mkfs.ext4 ${PARTITION_ID}
 
-mkdir -p /media/data
-_addToFstab "${PARTITION_ID} /media/data ext4 rw,noinit_itable,noatime,nodiratime,discard 0 2"
+mkdir -p ${DATA_PATH}
+_addToFstab "${PARTITION_ID} ${DATA_PATH} ext4 rw,noinit_itable,noatime,nodiratime,discard 0 2"
 
-mount ${PARTITION_ID} /media/data
-rm -rf "/media/data/lost+found"
+mount ${PARTITION_ID} ${DATA_PATH}
+rm -rf "${DATA_PATH}/lost+found"
 
 _addToData /etc
 
 _addToData /etc/ssh
-_rebindToData /etc/ssh/sshd /media/data/etc/ssh
-ssh-keygen -A -f /media/data
+_rebindToData /etc/ssh/sshd ${DATA_PATH}/etc/ssh
+ssh-keygen -A -f ${DATA_PATH}
 
 _addToData /var
 
@@ -85,17 +85,17 @@ _rebindToData /var/cache
 
 _addToData /var/lib
 #_rebindToData /var/lib/systemd
-_rebindToData /var/lib/docker
+_addToData /var/lib/docker
 
 mkdir -p /var/lib/containerd
 chmod --reference=/var/lib/docker /var/lib/containerd
 chown --reference=/var/lib/docker /var/lib/containerd
-_rebindToData /var/lib/containerd
+_addToData /var/lib/containerd
 
 _addToData /root
 
-mkdir -p /media/data/etc/homer
-cp config.default/homer/config-base.yml /media/data/etc/homer/config-base.yml
+mkdir -p ${DATA_PATH}/etc/homer
+cp config.default/homer/config-base.yml ${DATA_PATH}/etc/homer/config-base.yml
 
 systemctl daemon-reload
 mount -a
